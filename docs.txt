@@ -5,8 +5,8 @@
 
 Project Name    : ClarityRx
 Category        : Healthcare AI / MedTech
-Stack           : Python 3.11 · Django 4.x · Gemini 2.5 Flash · Groq LLaMA 3.3
-Repository      : https://github.com/Noob-Developer-Real/ClarityRx
+Stack           : Python 3.11 · Django 4.x · Gemini 2.5 Flash · Groq LLaMA 3.3 · Anakin Wire
+Repository      : https://github.com/Noob-Developer-Real/Clarity_Rx
 Author          : Noob Mon
 
 --------------------------------------------------------------------------------
@@ -434,7 +434,7 @@ User Experience
 10. RUNNING LOCALLY — QUICK REFERENCE
 --------------------------------------------------------------------------------
 
-  git clone https://github.com/Noob-Developer-Real/ClarityRx.git
+  git clone https://github.com/Noob-Developer-Real/Clarity_Rx.git
   cd ClarityRx
   python -m venv .venv && source .venv/bin/activate
   pip install -r requirements.txt
