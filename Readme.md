@@ -13,6 +13,7 @@
 [![Gemini](https://img.shields.io/badge/Gemini_2.5_Flash-OCR-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/gemini)
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-F55036?style=for-the-badge)](https://groq.com)
 [![Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/rgVUMTHk-vA)
+[![Twitter Post](https://img.shields.io/badge/View%20Twitter%20Post-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/i/status/2061200836987159025)
 
 **Built for · Anakin Build-A-Thon2026**
 
