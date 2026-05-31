@@ -38,8 +38,6 @@ def _wire_run(action_id: str, params: dict) -> dict | None:
 
 def _fetch_netmeds(query: str) -> dict:
     result = _wire_run("nm_search", {"query": query, "page_id": "*", "per_page": 10})
-    print("\nNETMED RAW RESPONSE")
-    print(result)
     if not result:
         return {"source": "Netmeds", "available": False, "products": []}
 
@@ -89,8 +87,6 @@ def _fetch_netmeds(query: str) -> dict:
 
 def _fetch_1mg(query: str) -> dict:
     result = _wire_run("tmg_search", {"query": query, "city": CITY, "page": 0})
-    print("\n1MG RAW RESPONSE")
-    print(result)
     if not result:
         return {"source": "Tata 1mg", "available": False, "products": []}
 
