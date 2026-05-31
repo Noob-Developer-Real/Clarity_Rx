@@ -69,7 +69,7 @@ Upload prescription image
 | 🧠 **AI Health Summary** | Explains your condition and medicines in plain language |
 | 💰 **Live Price Comparison** | Real-time prices from Truemeds, Netmeds, Tata 1mg — side by side |
 | 📊 **Confidence Scores** | Every drug shows how confident the AI is in its identification |
-| ⚡ **Parallel Price Fetching** | All 3 pharmacies queried simultaneously — results in ~2–3 seconds |
+| ⚡ **Parallel Price Fetching** | All 3 pharmacies queried simultaneously — results in ~10–20 seconds |
 | 🔒 **Privacy First** | User-scoped data — patients only see their own prescriptions |
 
 ---
