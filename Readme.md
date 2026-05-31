@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="images/favicon.jpg" width="80" alt="ClarityRx Logo" />
-
 # ClarityRx
 
 ### AI-Powered Indian Prescription Reader & Medicine Price Comparator
