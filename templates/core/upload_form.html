@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload & Crop | ClarityRx{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<body class="hero-bg">
+    <nav class="nav-container">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="bg-blue-600 text-white w-10 h-10 flex items-center justify-center rounded-xl shadow-lg">
+                <i class="fas fa-hand-holding-medical"></i>
+            </div>
+            <span class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">Clarity<span
+                    class="text-blue-600">Rx</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'prescription_history' %}" class="text-sm font-bold text-slate-600 hover:text-blue-600 transition">History</a>
+        </div>
+    </nav>
+
+    <main class="pt-12 md:pt-20 pb-20 px-6 max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-4">Step 1: <span class="text-gradient">Crop
+                    Image</span></h1>
+            <p class="text-slate-500">Focus on the medicine names and dosages for the best AI results.</p>
+        </div>
+
+        <div class="glass-card shadow-2xl border-none">
+
+            <!-- Drop zone -->
+            <div id="upload-placeholder"
+                class="border-2 border-dashed border-slate-200 rounded-[30px] p-12 text-center cursor-pointer hover:bg-blue-50 transition">
+                <i class="fas fa-camera text-4xl text-blue-600 mb-4 block"></i>
+                <p class="text-lg font-bold">Click or drag &amp; drop to upload</p>
+                <p class="text-sm text-slate-400 mt-1">Supports JPG, PNG, HEIC</p>
+            </div>
+
+            <!-- Cropper -->
+            <div id="cropper-wrapper" class="hidden">
+                <div class="max-h-[500px] overflow-hidden rounded-2xl">
+                    <img id="image-to-crop" src="" class="max-w-full">
+                </div>
+                <div class="flex justify-center gap-4 mt-8">
+                    <button id="cancel-btn" type="button"
+                        class="px-6 py-3 bg-slate-200 rounded-full font-bold">Cancel</button>
+                    <button id="process-btn" type="button" class="btn-winner py-4 px-10">
+                        <i class="fas fa-check"></i> Process Cropped Area
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <a href="{% url 'home' %}"
+                    class="text-sm font-bold text-slate-500 hover:text-slate-900 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-chevron-left text-xs"></i> Back to Homepage
+                </a>
+            </div>
+        </div>
+
+        <!-- Submission form -->
+        <form id="final-form" method="POST" enctype="multipart/form-data" style="display:none;">
+            {% csrf_token %}
+            <input type="file" name="image" id="blob-input">
+        </form>
+    </main>
+</body>
+
+<script>
+    const imageDisplay = document.getElementById('image-to-crop');
+    const placeholder = document.getElementById('upload-placeholder');
+    const wrapper = document.getElementById('cropper-wrapper');
+    let cropper = null;
+
+    function loadFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            imageDisplay.src = ev.target.result;
+            placeholder.classList.add('hidden');
+            wrapper.classList.remove('hidden');
+            if (cropper) { cropper.destroy(); cropper = null; }
+            cropper = new Cropper(imageDisplay, { viewMode: 2, movable: true, zoomable: true });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetToDropZone() {
+        if (cropper) { cropper.destroy(); cropper = null; }
+        imageDisplay.src = '';
+        wrapper.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+    }
+
+    // ── Click to open file picker ─────────────────────────────────────────────
+    // Create a fresh <input> every click — avoids ALL stale-state / double-fire issues
+    placeholder.addEventListener('click', () => {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.onchange = (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); };
+        inp.click();
+    });
+
+    // ── Drag & drop ───────────────────────────────────────────────────────────
+    placeholder.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        placeholder.classList.add('bg-blue-50');
+    });
+    placeholder.addEventListener('dragleave', () => placeholder.classList.remove('bg-blue-50'));
+    placeholder.addEventListener('drop', (e) => {
+        e.preventDefault();
+        placeholder.classList.remove('bg-blue-50');
+        loadFile(e.dataTransfer.files[0]);
+    });
+
+    // ── Process ───────────────────────────────────────────────────────────────
+    document.getElementById('process-btn').addEventListener('click', () => {
+        if (!cropper) return;
+        cropper.getCroppedCanvas().toBlob((blob) => {
+            const file = new File([blob], 'cropped_rx.jpg', { type: 'image/jpeg' });
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById('blob-input').files = dt.files;
+            document.getElementById('final-form').submit();
+        }, 'image/jpeg', 0.92);
+    });
+
+    // ── Cancel ────────────────────────────────────────────────────────────────
+    document.getElementById('cancel-btn').addEventListener('click', resetToDropZone);
+</script>
+
+{% endblock %}

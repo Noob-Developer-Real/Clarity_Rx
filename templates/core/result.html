@@ -1,0 +1,873 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Prescription Result | ClarityRx{% endblock %}
+
+{% block content %}
+
+<style>
+    /* ── Extra styles on top of base.html — same blue palette, same fonts ── */
+
+    /* Condition banner */
+    .condition-banner {
+        background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%);
+        border-radius: 1rem;
+        padding: 1rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #fff;
+        margin-bottom: 1.5rem;
+    }
+
+    .condition-banner .cb-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .condition-banner .cb-label {
+        font-size: .68rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: .75;
+        font-weight: 600;
+    }
+
+    .condition-banner .cb-value {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-top: .1rem;
+    }
+
+    .condition-banner .cb-meta {
+        font-size: .75rem;
+        opacity: .7;
+        margin-top: .15rem;
+    }
+
+    /* ── Medicine catalog grid — 3 columns ── */
+    .med-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+    }
+
+    @media (max-width: 768px) {
+        .med-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .med-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── Medicine card ── */
+    .med-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 1.1rem;
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: transform .2s, box-shadow .2s;
+        animation: fadeUp .45s ease both;
+    }
+
+    .med-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.14);
+    }
+
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Card header strip */
+    .med-card-header {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        padding: .9rem 1rem .7rem;
+        border-bottom: 1px solid rgba(37, 99, 235, 0.09);
+    }
+
+    .med-card-header .med-name {
+        font-size: .9rem;
+        font-weight: 800;
+        color: #1e3a8a;
+        line-height: 1.3;
+    }
+
+    .med-card-header .med-generic {
+        font-size: .7rem;
+        color: #64748b;
+        margin-top: .15rem;
+    }
+
+    /* Verified / unverified badge */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .3px;
+        padding: .2rem .55rem;
+        border-radius: 999px;
+        margin-top: .4rem;
+    }
+
+    .badge-verified {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-unverified {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /* Card body */
+    .med-card-body {
+        padding: .85rem 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: .65rem;
+    }
+
+    /* Confidence bar */
+    .conf-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: .67rem;
+        color: #64748b;
+        margin-bottom: .25rem;
+    }
+
+    .conf-track {
+        height: 5px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+
+    .conf-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 1s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .conf-high {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .conf-medium {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .conf-low {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+
+    /* Meta chips */
+    .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem;
+    }
+
+    .chip {
+        font-size: .67rem;
+        background: rgba(37, 99, 235, .07);
+        color: #1e40af;
+        border-radius: .45rem;
+        padding: .2rem .55rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+        white-space: nowrap;
+    }
+
+    .chip i {
+        font-size: .62rem;
+        opacity: .7;
+    }
+
+    /* Description */
+    .med-desc {
+        font-size: .75rem;
+        color: #475569;
+        line-height: 1.55;
+        border-top: 1px solid rgba(37, 99, 235, .07);
+        padding-top: .55rem;
+        flex: 1;
+    }
+
+    /* ── Price button (bottom of card) ── */
+    .med-card-footer {
+        padding: .7rem 1rem;
+        border-top: 1px solid rgba(37, 99, 235, .07);
+    }
+
+    .price-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .45rem;
+        background: #2563eb;
+        color: #fff;
+        font-size: .78rem;
+        font-weight: 700;
+        border: none;
+        border-radius: .65rem;
+        padding: .55rem .9rem;
+        cursor: pointer;
+        transition: background .2s, transform .15s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .price-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .price-btn:disabled {
+        background: #93c5fd;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .price-btn i {
+        font-size: .72rem;
+    }
+
+    /* ── Price panel inside card ── */
+    .price-panel {
+        display: none;
+        padding: .75rem 1rem .85rem;
+        border-top: 1px solid rgba(37, 99, 235, .08);
+        animation: fadeUp .3s ease;
+    }
+
+    .price-panel.open {
+        display: block;
+    }
+
+    /* Skeleton shimmer */
+    .skel-row {
+        display: flex;
+        gap: .5rem;
+        margin-bottom: .5rem;
+    }
+
+    .skel {
+        flex: 1;
+        border-radius: .6rem;
+        background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+        background-size: 400% 100%;
+        animation: shimmer 1.3s infinite;
+    }
+
+    .skel-h {
+        height: 72px;
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: 100% 0;
+        }
+
+        100% {
+            background-position: -100% 0;
+        }
+    }
+
+    .loading-text {
+        font-size: .72rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .5rem;
+    }
+
+    .spin-sm {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(37, 99, 235, .2);
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+        flex-shrink: 0;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Price catalog cards inside panel */
+    .price-catalog {
+        display: flex;
+        flex-direction: column;
+        gap: .45rem;
+    }
+
+    .price-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(90deg, #1e3a8a, #2563eb);
+        color: #fff;
+        border-radius: .75rem;
+        padding: .6rem .85rem;
+        text-decoration: none;
+        transition: filter .2s, transform .15s;
+        position: relative;
+        overflow: hidden;
+        animation: fadeUp .3s ease both;
+    }
+
+    .price-row:hover {
+        filter: brightness(1.08);
+        transform: translateX(2px);
+    }
+
+    .price-row::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 90% 20%, rgba(255, 255, 255, .1), transparent 55%);
+    }
+
+    .price-row .pr-source {
+        font-size: .65rem;
+        font-weight: 700;
+        opacity: .75;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+
+    .price-row .pr-name {
+        font-size: .75rem;
+        font-weight: 500;
+        opacity: .88;
+        margin-top: .05rem;
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .price-row .pr-price {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -.3px;
+        flex-shrink: 0;
+    }
+
+    .price-row .pr-mrp {
+        font-size: .65rem;
+        opacity: .6;
+        text-decoration: line-through;
+        margin-left: .25rem;
+    }
+
+    .price-row .pr-disc {
+        font-size: .62rem;
+        background: rgba(255, 255, 255, .18);
+        padding: .1rem .4rem;
+        border-radius: 999px;
+        margin-top: .15rem;
+        display: inline-block;
+    }
+
+    .best-tag {
+        position: absolute;
+        top: .4rem;
+        right: .5rem;
+        background: #10b981;
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .3px;
+        text-transform: uppercase;
+        padding: .1rem .4rem;
+        border-radius: 999px;
+        color: #fff;
+    }
+
+    .no-price {
+        font-size: .75rem;
+        color: #94a3b8;
+        text-align: center;
+        padding: .5rem 0;
+    }
+
+    /* ── Section headings ── */
+    .section-heading {
+        font-size: .7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #2563eb;
+        margin-bottom: .85rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .section-heading::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(37, 99, 235, .15);
+    }
+
+    /* ── AI Summary ── */
+    .summary-box {
+        background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+        border: 1px solid rgba(37, 99, 235, .15);
+        border-radius: 1.1rem;
+        padding: 1.25rem 1.4rem;
+        margin-top: 1.5rem;
+        animation: fadeUp .5s ease both;
+        animation-delay: .4s;
+    }
+
+    .summary-box .sum-title {
+        font-size: .8rem;
+        font-weight: 800;
+        color: #1e3a8a;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .7rem;
+    }
+
+    .summary-box .sum-title i {
+        color: #2563eb;
+    }
+
+    .summary-box p {
+        font-size: .85rem;
+        color: #334155;
+        line-height: 1.7;
+    }
+
+    /* ── Processing & failed states ── */
+    .state-center {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    /* Stagger card animations */
+    .med-card:nth-child(1) {
+        animation-delay: .04s;
+    }
+
+    .med-card:nth-child(2) {
+        animation-delay: .09s;
+    }
+
+    .med-card:nth-child(3) {
+        animation-delay: .14s;
+    }
+
+    .med-card:nth-child(4) {
+        animation-delay: .19s;
+    }
+
+    .med-card:nth-child(5) {
+        animation-delay: .24s;
+    }
+
+    .med-card:nth-child(6) {
+        animation-delay: .29s;
+    }
+
+    .med-card:nth-child(7) {
+        animation-delay: .34s;
+    }
+
+    .med-card:nth-child(8) {
+        animation-delay: .39s;
+    }
+
+    .med-card:nth-child(9) {
+        animation-delay: .44s;
+    }
+</style>
+<nav class="nav-container">
+    <div class="flex items-center gap-2 md:gap-3">
+        <div class="bg-blue-600 text-white w-10 h-10 flex items-center justify-center rounded-xl shadow-lg">
+            <i class="fas fa-hand-holding-medical fa-lg"></i>
+        </div>
+        <span class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">Clarity<span
+                class="text-blue-600">Rx</span></span>
+    </div>
+    <div class="flex items-center gap-3">
+        <a href="{% url 'prescription_history' %}"
+            class="text-sm font-bold text-slate-600 hover:text-blue-600 transition">History</a>
+        <a href="{% url 'home' %}" class="text-sm font-bold text-slate-600 hover:text-blue-600 transition">Back to
+            Upload</a>
+    </div>
+</nav>
+<main class="min-h-screen flex items-center justify-center px-4 py-10">
+    <div class="glass-card w-full" style="max-width:960px;">
+
+        <!-- ── Header ── -->
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-extrabold text-slate-800">Prescription Analysis</h2>
+            <p class="text-slate-500 mt-1 text-sm">
+                {% if processing_time %}Processed in {{ processing_time }}s · {% endif %}
+                {{ verified_count }} of {{ total_count }} medicine{% if total_count != 1 %}s{% endif %} verified
+            </p>
+        </div>
+
+        <!-- ── Prescription image ── -->
+        <div class="flex justify-center mb-6">
+            <img src="{{ prescription.image.url }}" alt="Uploaded Prescription"
+                class="rounded-xl shadow-md max-h-60 object-contain">
+        </div>
+
+        <!-- ── Processing state ── -->
+        {% if prescription.processing_status == "processing" %}
+        <div class="state-center">
+            <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-600 mb-4"></i>
+            <p class="text-lg font-semibold text-slate-700">Reading your prescription…</p>
+            <p class="text-slate-500 mt-1 text-sm">This usually takes a few seconds</p>
+            <meta http-equiv="refresh" content="3">
+        </div>
+
+        <!-- ── Failed state ── -->
+        {% elif prescription.processing_status == "failed" %}
+        <div class="state-center">
+            <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500 mb-4"></i>
+            <p class="text-lg font-semibold text-slate-700">Processing failed</p>
+            {% if prescription.error_message %}
+            <p class="text-slate-500 mt-1 text-sm">{{ prescription.error_message }}</p>
+            {% endif %}
+            <a href="{% url 'upload_prescription' %}" class="btn-winner px-5 py-2.5 mt-5 inline-flex gap-2">
+                <i class="fa-solid fa-arrow-left text-sm"></i> Try Again
+            </a>
+        </div>
+
+        <!-- ── Completed state ── -->
+        {% else %}
+
+        <!-- Condition / disease banner -->
+        {% if chief_complaint and chief_complaint != "UNCLEAR" %}
+        <div class="condition-banner">
+            <div class="cb-icon"><i class="fa-solid fa-stethoscope"></i></div>
+            <div>
+                <div class="cb-label">Condition / Chief Complaint</div>
+                <div class="cb-value">{{ chief_complaint }}</div>
+                {% if patient_age and patient_age != "UNCLEAR" %}
+                <div class="cb-meta">
+                    Age: {{ patient_age }}
+                    {% if patient_weight and patient_weight != "UNCLEAR" %}· Weight: {{ patient_weight }}{% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ── Verified medicines catalog ── -->
+        {% if verified_medicines %}
+        <div class="section-heading">
+            <i class="fa-solid fa-shield-halved text-blue-600"></i>
+            Verified Medicines
+        </div>
+
+        <div class="med-grid">
+            {% for med in verified_medicines %}
+            <div class="med-card">
+
+                <!-- Card header -->
+                <div class="med-card-header">
+                    <div class="med-name">{{ med.matched_name|default:med.ocr_name }}</div>
+                    {% if med.resolved_generic %}
+                    <div class="med-generic">{{ med.resolved_generic }}</div>
+                    {% endif %}
+                    <span class="badge badge-verified">
+                        <i class="fa-solid fa-check"></i> Verified
+                    </span>
+                </div>
+
+                <!-- Card body -->
+                <div class="med-card-body">
+
+                    <!-- Confidence bar -->
+                    <div>
+                        <div class="conf-label">
+                            <span>Match confidence</span>
+                            <span>{{ med.match_score|floatformat:0 }}%</span>
+                        </div>
+                        <div class="conf-track">
+                            {% if med.match_score >= 85 %}
+                            <div class="conf-fill conf-high" style="width:{{ med.match_score }}%"></div>
+                            {% elif med.match_score >= 70 %}
+                            <div class="conf-fill conf-medium" style="width:{{ med.match_score }}%"></div>
+                            {% else %}
+                            <div class="conf-fill conf-low" style="width:{{ med.match_score }}%"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Meta chips -->
+                    <div class="chip-row">
+                        {% if med.form %}
+                        <span class="chip"><i class="fa-solid fa-pills"></i>{{ med.form }}</span>
+                        {% endif %}
+                        {% if med.frequency %}
+                        <span class="chip"><i class="fa-regular fa-clock"></i>{{ med.frequency }}</span>
+                        {% endif %}
+                        {% if med.duration %}
+                        <span class="chip"><i class="fa-solid fa-calendar-days"></i>{{ med.duration }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    {% if med.description %}
+                    <div class="med-desc">{{ med.description }}</div>
+                    {% endif %}
+
+                </div><!-- /card-body -->
+
+                <!-- Price compare button at bottom -->
+                <div class="med-card-footer">
+                    <button class="price-btn" id="btn-{{ med.id }}"
+                        onclick="fetchPrices('{{ med.id }}', '{{ med.matched_name|default:med.ocr_name|escapejs }}')"
+                        data-open="false">
+                        <i class="fa-solid fa-tag"></i> Compare Prices
+                    </button>
+                </div>
+
+                <!-- Price panel (hidden until button clicked) -->
+                <div class="price-panel" id="panel-{{ med.id }}"></div>
+
+            </div><!-- /med-card -->
+            {% endfor %}
+        </div><!-- /med-grid -->
+        {% endif %}
+
+        <!-- ── Unverified medicines ── -->
+        {% if unverified_medicines %}
+        <div class="section-heading" style="margin-top:.5rem;">
+            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+            Could Not Verify
+        </div>
+        <div class="med-grid">
+            {% for med in unverified_medicines %}
+            <div class="med-card" style="opacity:.85;">
+                <div class="med-card-header" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);">
+                    <div class="med-name" style="color:#92400e;">{{ med.ocr_name }}</div>
+                    {% if med.matched_name %}
+                    <div class="med-generic">Closest: {{ med.matched_name }}</div>
+                    {% endif %}
+                    <span class="badge badge-unverified">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Unverified
+                    </span>
+                </div>
+                <div class="med-card-body">
+                    <div>
+                        <div class="conf-label">
+                            <span>Match confidence</span>
+                            <span>{{ med.match_score|floatformat:0 }}%</span>
+                        </div>
+                        <div class="conf-track">
+                            <div class="conf-fill conf-low" style="width:{{ med.match_score }}%"></div>
+                        </div>
+                    </div>
+                    <div class="med-desc" style="color:#92400e; border-top-color:rgba(245,158,11,.15);">
+                        {% if med.description %}{{ med.description }}{% else %}Could not be matched in our database.
+                        Please confirm with your pharmacist.{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- ── AI Health Summary — shown after all medicine cards ── -->
+        {% if ai_summary %}
+        <div class="summary-box">
+            <div class="sum-title">
+                <i class="fa-solid fa-brain"></i>
+                Health Summary
+            </div>
+            <p>{{ ai_summary }}</p>
+        </div>
+        {% endif %}
+
+        <!-- ── Disclaimer ── -->
+        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-700">
+            <strong>Note:</strong>
+            This explanation is for understanding only and does not replace medical advice.
+            Always consult your doctor or pharmacist before changing your medication.
+        </div>
+
+        <!-- ── Back button ── -->
+        <div class="mt-6 text-center">
+            <a href="{% url 'upload_prescription' %}" class="btn-winner px-6 py-3 inline-flex gap-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                Upload Another
+            </a>
+        </div>
+
+        {% endif %}<!-- /completed -->
+    </div><!-- /glass-card -->
+</main>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const PRICES_URL = "{% url 'api_medicine_prices' %}";
+    /**
+     * fetchPrices(medicineId, drugName)
+     * ─────────────────────────────────
+     * Triggered by "Compare Prices" button on each card.
+     * 1. Shows animated skeleton loading state
+     * 2. Calls /api/prices/?drug=<name>&medicine_id=<id>
+     * 3. Renders product catalog rows inside the card's price panel
+     */
+    function fetchPrices(medId, drugName) {
+        const btn = document.getElementById('btn-' + medId);
+        const panel = document.getElementById('panel-' + medId);
+        const isOpen = btn.dataset.open === 'true';
+
+        // Toggle close
+        if (isOpen) {
+            panel.classList.remove('open');
+            btn.dataset.open = 'false';
+            btn.innerHTML = '<i class="fa-solid fa-tag"></i> Compare Prices';
+            btn.disabled = false;
+            return;
+        }
+
+        // Already loaded — just re-show
+        if (panel.dataset.loaded === '1') {
+            panel.classList.add('open');
+            btn.dataset.open = 'true';
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Hide Prices';
+            return;
+        }
+
+        // Show skeleton loading
+        panel.innerHTML = `
+    <div class="loading-text">
+      <div class="spin-sm"></div>
+      <span>Checking Netmeds, Tata 1mg…</span>
+    </div>
+    <div class="skel-row">
+      <div class="skel skel-h"></div>
+      <div class="skel skel-h"></div>
+    </div>
+    <div class="skel-row">
+      <div class="skel skel-h"></div>
+      <div class="skel skel-h"></div>
+    </div>`;
+        panel.classList.add('open');
+        btn.dataset.open = 'true';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fetching…';
+        btn.disabled = true;
+
+        fetch(`${PRICES_URL}?drug=${encodeURIComponent(drugName)}&medicine_id=${medId}`)
+            .then(r => r.json())
+            .then(data => {
+                panel.innerHTML = buildCatalog(data);
+                panel.dataset.loaded = '1';
+                btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Hide Prices';
+                btn.disabled = false;
+            })
+            .catch((err) => {
+                console.error('[ClarityRx] price fetch error:', err);
+                panel.innerHTML = '<p class="no-price"><i class="fa-solid fa-circle-xmark"></i> Could not load prices. Try again later.</p>';
+                panel.dataset.loaded = '0';
+                btn.innerHTML = '<i class="fa-solid fa-tag"></i> Compare Prices';
+                btn.dataset.open = 'false';
+                btn.disabled = false;
+            });
+    }
+
+    /**
+     * buildCatalog(data) -> HTML string
+     * New shape: { drug_name, cheapest: {source,price,...}|null,
+     *   sources: [{ source, available, name, price, mrp, discount, pack, url }] }
+     *   Sources: Netmeds, Tata 1mg
+     * Always renders a row for every source — N/A when unavailable.
+     */
+    function buildCatalog(data) {
+        const sources = data.sources || [];
+        if (!sources.length) {
+            return '<p class="no-price"><i class="fa-solid fa-circle-xmark"></i> No prices found.</p>';
+        }
+
+        const cheapestSource = data.cheapest ? data.cheapest.source : null;
+
+        const rows = sources.map((src, i) => {
+            if (!src.available || src.price === null) {
+                return `
+      <div class="price-row" style="animation-delay:${i * 55}ms; background:linear-gradient(90deg,#64748b,#94a3b8); opacity:.65; cursor:default; text-decoration:none;">
+        <div>
+          <div class="pr-source">${src.source}</div>
+          <div class="pr-name" style="opacity:.7;">Not available</div>
+        </div>
+        <div style="text-align:right; flex-shrink:0; margin-left:.5rem;">
+          <span class="pr-price" style="font-size:.85rem; opacity:.7;">N/A</span>
+        </div>
+      </div>`;
+            }
+
+            const isBest = src.source === cheapestSource;
+            const mrpHtml = (src.mrp && src.mrp > src.price)
+                ? `<span class="pr-mrp">\u20b9${src.mrp}</span>` : '';
+            const discHtml = src.discount
+                ? `<span class="pr-disc">${src.discount}</span>` : '';
+            const bestBadge = isBest ? '<span class="best-tag">Cheapest</span>' : '';
+
+            return `
+      <a class="price-row" href="${src.url || '#'}" target="_blank" rel="noopener"
+         style="animation-delay:${i * 55}ms">
+        ${bestBadge}
+        <div>
+          <div class="pr-source">${src.source}</div>
+          <div class="pr-name">${src.name || data.drug_name}</div>
+          ${discHtml}
+        </div>
+        <div style="text-align:right; flex-shrink:0; margin-left:.5rem;">
+          <div><span class="pr-price">\u20b9${src.price}</span>${mrpHtml}</div>
+          <div style="font-size:.65rem;opacity:.7;margin-top:.1rem;">${src.pack || ''}</div>
+        </div>
+      </a>`;
+        }).join('');
+
+        return `<div class="price-catalog">${rows}</div>`;
+    }
+</script>
+{% endblock %}

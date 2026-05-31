@@ -1,0 +1,196 @@
+/* CONSOLIDATED & MOBILE FRIENDLY CSS */
+:root {
+    --primary: #2563eb;
+    --primary-glow: rgba(37, 99, 235, 0.2);
+    --accent: #0ea5e9;
+    --glass: rgba(255, 255, 255, 0.9);
+    --danger-red: #ef4444;
+    --warning-orange: #f97316;
+    --accent-teal: #14b8a6;
+}
+main .flex-row,
+main .md\:flex-row {
+    flex-direction: column !important;
+}
+
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+
+body { background-color: #f0f4f8; color: #1e293b; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+/* Responsive Background */
+.hero-bg {
+    background: linear-gradient(-45deg, #f0f9ff, #e0f2fe, #f0fdf4, #ffffff);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Navbar */
+.nav-container {
+    background: var(--glass);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 0.75rem 8%;
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 1000;
+}
+
+/* Main Button */
+.btn-winner {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 15px var(--primary-glow);
+    border-radius: 50px;
+}
+
+.btn-winner:hover { transform: translateY(-2px); box-shadow: 0 12px 20px var(--primary-glow); }
+
+.comparison-container {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    max-width: 900px; margin: 3rem auto;
+    padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+    .comparison-container { display: grid; grid-template-columns: 1fr 50px 1fr; align-items: center; gap: 1rem; }
+}
+
+.box-old { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 2rem; }
+.box-new { background: var(--primary); color: white; border-radius: 20px; padding: 2rem; box-shadow: 0 20px 40px var(--primary-glow); }
+
+/* ============================================================
+   MOBILE RESPONSIVE OVERRIDES (Desktop remains untouched)
+   ============================================================ */
+
+/* Targets Tablets and smaller (1024px and down) */
+@media (max-width: 1024px) {
+    .comparison-container {
+        flex-direction: column !important;
+        display: flex !important;
+        padding: 0 1.5rem;
+    }
+    
+    .box-old, .box-new {
+        width: 100% !important;
+    }
+
+    /* Force grids to stack on tablets/phones */
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Targets Mobile Phones (768px and down) */
+@media (max-width: 768px) {
+    /* 1. Prevent Horizontal Scrolling */
+    body, html {
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    /* 2. Scale Typography (Overrides Tailwind text-7xl, text-5xl, etc.) */
+    h1 { 
+        font-size: 2rem !important; 
+        line-height: 1.2 !important; 
+        letter-spacing: -0.02em !important;
+    }
+    
+    h2 { 
+        font-size: 1.6rem !important; 
+    }
+
+    .text-xl, .text-lg {
+        font-size: 1rem !important;
+        line-height: 1.5 !important;
+    }
+
+    /* 3. Navigation Adjustments */
+    .nav-container {
+        padding: 0.75rem 5% !important;
+    }
+
+    /* 4. Layout Stacking */
+    .flex-row, .md\:flex-row {
+        flex-direction: column !important;
+    }
+
+    /* Adjust padding for sections */
+    main, section {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    /* 5. Glass Card Optimization */
+    .glass-card {
+        padding: 1.25rem !important;
+        margin-bottom: 1rem;
+        border-radius: 20px !important;
+    }
+
+    /* 6. Table Responsiveness (Translation Matrix) */
+    .overflow-x-auto {
+        margin: 0 -1rem;
+        padding: 0 1rem;
+        display: block;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 500px; /* Forces scroll instead of squishing text */
+    }
+
+    /* 7. Buttons (Thumb-friendly) */
+    .btn-winner {
+        width: 100%;
+        justify-content: center;
+        padding: 1.1rem !important;
+        font-size: 1rem !important;
+    }
+
+    /* 8. Step-by-Step Workflow line adjustments */
+    .relative.pl-12 {
+        padding-left: 3rem !important;
+    }
+    
+    .relative.pl-12::before {
+        left: 12px !important;
+    }
+}
+
+/* Extra Small Devices (Under 380px) */
+@media (max-width: 380px) {
+    h1 { font-size: 1.75rem !important; }
+    
+    .text-gradient {
+        display: inline-block;
+        word-break: break-word;
+    }
+}
+
+/* Error Alert Styles */
+.bg-red-50 {
+    background-color: #fef2f2;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+    .p-4.rounded-xl {
+        padding: 0.75rem !important; /* Slimmer alerts on mobile */
+    }
+}

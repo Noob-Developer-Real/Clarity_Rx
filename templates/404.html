@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found | ClarityRx{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex flex-center items-center justify-center p-6">
+    <div class="max-w-md w-full text-center">
+        <div class="relative mb-8">
+            <div class="text-9xl font-black text-slate-100 absolute inset-0 -top-8 select-none">404</div>
+            <div class="bg-white w-20 h-20 flex items-center justify-center rounded-2xl shadow-xl mx-auto relative z-10 border border-slate-100">
+                <i class="fas fa-search-minus text-3xl text-blue-600"></i>
+            </div>
+        </div>
+
+        <div class="glass-card shadow-2xl relative z-10">
+            <h1 class="text-3xl font-extrabold text-slate-900 mb-3">Oops! Lost in the Lab?</h1>
+            <p class="text-slate-500 mb-8 leading-relaxed">
+                We couldn't find the prescription or page you were looking for. It might have been moved or deleted.
+            </p>
+
+            <div class="space-y-3">
+                <a href="{% url 'home' %}" class="btn-winner w-full py-4 flex justify-center items-center gap-2">
+                    <i class="fas fa-home text-xs"></i> Return to Dashboard
+                </a>
+                
+                <button onclick="history.back()" class="w-full py-3 text-sm font-bold text-slate-500 hover:text-slate-900 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-arrow-left text-xs"></i> Go Back
+                </button>
+            </div>
+        </div>
+        
+        <p class="mt-8 text-xs text-slate-400 uppercase tracking-widest font-bold">Error Code: RX-404</p>
+    </div>
+</div>
+{% endblock %}

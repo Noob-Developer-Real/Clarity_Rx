@@ -1,0 +1,618 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}ClarityRx | AI Prescription Reader for India{% endblock %}
+{% block content %}
+
+<body class="hero-bg">
+    <nav class="nav-container">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div
+                class="bg-blue-600 text-white w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-xl shadow-lg">
+                <i class="fas fa-hand-holding-medical fa-lg"></i>
+            </div>
+            <span class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">Clarity<span
+                    class="text-blue-600">Rx</span></span>
+        </div>
+
+        <div class="hidden md:flex gap-8 font-bold text-slate-600">
+            <a href="#how" class="hover:text-blue-600 transition">How it Works</a>
+            <a href="#impact" class="hover:text-blue-600 transition">Impact</a>
+            <a href="#tech" class="hover:text-blue-600 transition">Technology</a>
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-6">
+            {% if user.is_authenticated %}
+            <a href="{% url 'prescription_history' %}"
+                class="hidden sm:block text-sm font-bold text-slate-600 hover:text-blue-600 transition">History</a>
+            <form action="{% url 'logout' %}" method="POST" class="inline">
+                {% csrf_token %}
+                <button type="submit"
+                    class="hidden sm:block text-sm font-bold text-red-600 hover:text-red-800 transition">
+                    Logout
+                </button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}"
+                class="hidden sm:block text-sm font-bold text-slate-600 hover:text-blue-600 transition">Login</a>
+            <a href="{% url 'signup' %}" class="btn-winner py-2 px-4 md:px-6 text-xs md:text-sm">Sign Up Free</a>
+            {% endif %}
+
+            <button class="md:hidden text-slate-900 text-xl" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div id="mobileMenu" class="fixed inset-0 bg-white z-[2000] hidden flex-col p-8 space-y-6 text-center">
+        <button class="absolute top-6 right-8 text-2xl" onclick="toggleMenu()">&times;</button>
+
+        {% if user.is_authenticated %}
+        <div class="mb-4">
+            <p class="text-slate-500 text-sm uppercase tracking-widest font-bold">Welcome,</p>
+            <p class="text-2xl font-extrabold text-slate-900">{{ user.first_name }}</p>
+        </div>
+        {% endif %}
+
+        <a href="#how" class="text-xl font-bold" onclick="toggleMenu()">How it Works</a>
+        <a href="#impact" class="text-xl font-bold" onclick="toggleMenu()">Impact</a>
+        <a href="#tech" class="text-xl font-bold" onclick="toggleMenu()">Technology</a>
+
+        <hr class="border-slate-100">
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'prescription_history' %}" class="text-xl font-bold text-slate-900"
+            onclick="toggleMenu()">History</a>
+        <form action="{% url 'logout' %}" method="POST" class="w-full">
+            {% csrf_token %}
+            <button type="submit" class="text-xl font-bold text-red-600 w-full py-2" onclick="toggleMenu()">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}" class="text-xl font-bold text-blue-600" onclick="toggleMenu()">Login</a>
+        <a href="{% url 'signup' %}" class="text-xl font-bold text-slate-900" onclick="toggleMenu()">Create Account</a>
+        {% endif %}
+    </div>
+
+    <header class="pt-12 md:pt-20 pb-10 px-6 text-center">
+        <div class="max-w-4xl mx-auto">
+            <div
+                class="inline-flex items-center gap-2 bg-white border border-blue-100 px-4 py-2 rounded-full shadow-sm mb-6 float">
+                <span class="relative flex h-3 w-3">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                </span>
+                <span class="text-[10px] md:text-xs font-bold text-blue-700 uppercase tracking-widest">Early MVP · Built
+                    for Indian Prescriptions</span>
+            </div>
+
+            <h1 class="text-4xl md:text-7xl font-extrabold text-slate-900 mb-6 leading-tight">
+                Read any Indian <br><span class="text-gradient">Prescription</span> instantly.
+            </h1>
+
+            <p class="text-lg md:text-xl text-slate-500 mb-8 md:mb-12 max-w-2xl mx-auto leading-relaxed">
+                Upload a photo of your handwritten prescription. ClarityRx uses AI to identify every medicine, explain
+                what it does, and compare live prices across Truemeds, Netmeds, and Tata 1mg — in seconds.
+            </p>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="{% url "upload_prescription" %}"
+                    class="btn-winner text-base md:text-lg px-8 md:px-10 py-4 md:py-5">
+                    <i class="fas fa-file-export"></i> Analyse My Prescription
+                </a>
+                <a href="#how"
+                    class="bg-white text-slate-700 px-8 md:px-10 py-4 md:py-5 rounded-full font-bold shadow-md hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-play-circle text-blue-600"></i> See How It Works
+                </a>
+            </div>
+        </div>
+
+        <div class="comparison-container px-4">
+            <div class="box-old">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter text-left block">Doctor's
+                    Handwritten Note</span>
+                <p class="text-base md:text-lg font-mono mt-2 text-slate-500 italic">"T. Sinarest 1-0-1 ⑦ | T.
+                    Montair-LC 0-0-1 ⑩"</p>
+            </div>
+            <div class="flex justify-center items-center text-blue-400 text-2xl py-2 md:py-0">
+                <i class="fas fa-chevron-right hidden md:block"></i>
+                <i class="fas fa-chevron-down md:hidden"></i>
+            </div>
+            <div class="box-new">
+                <span class="text-[10px] font-black text-blue-200 uppercase tracking-tighter text-left block">ClarityRx
+                    Output</span>
+                <p class="text-lg md:text-xl font-bold mt-2">"Sinarest — cold & congestion tablet, morning + night for 7
+                    days. Montair-LC — allergy tablet, at night for 10 days."</p>
+            </div>
+        </div>
+    </header>
+
+    <section id="how" class="py-16 md:py-24 px-6 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+            <div class="glass-card">
+                <div
+                    class="w-12 h-12 md:w-14 md:h-14 bg-blue-100 text-blue-600 flex items-center justify-center rounded-2xl mb-6 text-xl">
+                    <i class="fas fa-language"></i>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold mb-4">Hindi-Aware OCR</h3>
+                <p class="text-slate-500 text-sm md:text-base">Decodes Indian prescriptions written in mixed
+                    Hindi-English — including Devanagari script, MAN dosing notation (1-0-1), and circled duration
+                    numbers like ⑦ = 7 days.</p>
+            </div>
+            <div class="glass-card">
+                <div
+                    class="w-12 h-12 md:w-14 md:h-14 bg-teal-100 text-teal-600 flex items-center justify-center rounded-2xl mb-6 text-xl">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold mb-4">3-Layer Verification</h3>
+                <p class="text-slate-500 text-sm md:text-base">Every drug goes through LLM name resolution → fuzzy
+                    database matching → clinical plausibility validation before it is shown as verified. Confidence
+                    score shown on every card.</p>
+            </div>
+            <div class="glass-card">
+                <div
+                    class="w-12 h-12 md:w-14 md:h-14 bg-orange-100 text-orange-600 flex items-center justify-center rounded-2xl mb-6 text-xl">
+                    <i class="fas fa-tag"></i>
+                </div>
+                <h3 class="text-xl md:text-2xl font-bold mb-4">Live Price Comparison</h3>
+                <p class="text-slate-500 text-sm md:text-base">Fetches real-time prices from Truemeds, Netmeds, and Tata
+                    1mg in parallel. Sorted cheapest first. Triggered on demand so the main result page stays fast.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 px-6 bg-blue-50/50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-16">
+            <div class="md:w-1/2">
+                <h2 class="text-3xl md:text-4xl font-extrabold mb-6 leading-tight text-slate-900">From unreadable scrawl
+                    <br><span class="text-blue-600">to clear instructions.</span></h2>
+                <p class="text-base md:text-lg text-slate-600 mb-8">Indian doctors write in a mix of brand names, Latin
+                    shorthand, Hindi words, and regional notation. Patients receive a paper they cannot decode.
+                    ClarityRx reads it so they don't have to.</p>
+
+                <div class="space-y-4">
+                    <div class="flex gap-4 p-4 bg-white rounded-2xl shadow-sm border border-blue-100 items-start">
+                        <i class="fas fa-camera text-xl text-blue-500 mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">Upload Prescription Photo</h4>
+                            <p class="text-xs md:text-sm text-slate-500">Any handwritten or printed Indian prescription.
+                                Even messy ones.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-4 bg-white rounded-2xl shadow-sm border border-teal-100 items-start">
+                        <i class="fas fa-microchip text-xl text-teal-500 mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">5-Layer AI Pipeline</h4>
+                            <p class="text-xs md:text-sm text-slate-500">Gemini OCR → LLM resolver → fuzzy match →
+                                plausibility check → descriptions.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-4 bg-blue-600 rounded-2xl shadow-md text-white items-start">
+                        <i class="fas fa-user-check text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold">Verified Medicine Cards + Prices</h4>
+                            <p class="text-xs md:text-sm text-blue-100">Every drug with dosage, confidence bar,
+                                plain-English use, and live pharmacy prices.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="md:w-1/2 glass-card p-0 overflow-hidden shadow-2xl border-none">
+                <div class="bg-slate-900 p-3 flex gap-2">
+                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                </div>
+                <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=800"
+                    class="w-full opacity-90">
+            </div>
+        </div>
+    </section>
+
+    <!-- ── EARLY MVP DISCLAIMER SECTION ── -->
+    <section class="py-12 px-6 max-w-4xl mx-auto">
+        <div class="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center">
+            <div
+                class="w-14 h-14 bg-amber-100 text-amber-600 flex items-center justify-center rounded-2xl mb-4 mx-auto text-2xl">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-3">This is an Early-Stage MVP</h3>
+            <p class="text-slate-600 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+                ClarityRx is under active development. Drug name matching relies on a local Indian medicine dataset of
+                limited size, and the fuzzy matching algorithm (RapidFuzz) is a statistical scorer — not a clinical
+                database. Results will be wrong for rare drugs, regional brands, or very messy handwriting.
+                <strong>Always verify with your pharmacist before acting on any output.</strong> Confidence scores are
+                shown on every card specifically so you know when to trust the result and when to double-check.
+            </p>
+        </div>
+    </section>
+
+    <section class="py-24 px-6 max-w-7xl mx-auto text-center">
+        <h2 class="text-3xl font-bold mb-16 underline decoration-blue-500 decoration-4 underline-offset-8">Who This Is
+            Built For</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="p-8 border-b-4 border-blue-500 bg-white rounded-t-3xl shadow-sm">
+                <i class="fas fa-person-cane text-3xl text-blue-500 mb-4"></i>
+                <h4 class="text-xl font-bold mb-2">Patients & Families</h4>
+                <p class="text-slate-500 text-sm">Understand what every medicine in your prescription is for, how often
+                    to take it, and how long — without asking the doctor to repeat themselves.</p>
+            </div>
+            <div class="p-8 border-b-4 border-teal-500 bg-white rounded-t-3xl shadow-sm">
+                <i class="fas fa-hands-holding-child text-3xl text-teal-500 mb-4"></i>
+                <h4 class="text-xl font-bold mb-2">Caregivers</h4>
+                <p class="text-slate-500 text-sm">Managing an elderly parent's medicines is hard. ClarityRx breaks down
+                    every drug into simple language and shows you the cheapest place to buy each one.</p>
+            </div>
+            <div class="p-8 border-b-4 border-purple-500 bg-white rounded-t-3xl shadow-sm">
+                <i class="fas fa-wallet text-3xl text-purple-500 mb-4"></i>
+                <h4 class="text-xl font-bold mb-2">Budget-Conscious Buyers</h4>
+                <p class="text-slate-500 text-sm">Compare prices across Truemeds, Netmeds, and Tata 1mg in one click.
+                    Find the cheapest version of every medicine on your prescription.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="impact"
+        class="bg-slate-900 rounded-[30px] md:rounded-[50px] mx-4 md:mx-10 py-16 md:py-20 px-6 text-white text-center">
+        <h2 class="text-3xl md:text-4xl font-extrabold mb-12">Why this matters in India.</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+                <h4 class="text-3xl md:text-5xl font-black text-blue-400 mb-2">1B+</h4>
+                <p class="text-slate-400 text-xs">Handwritten prescriptions written in India every year</p>
+            </div>
+            <div>
+                <h4 class="text-3xl md:text-5xl font-black text-teal-400 mb-2">70%</h4>
+                <p class="text-slate-400 text-xs">Patients who cannot read their own prescription correctly</p>
+            </div>
+            <div>
+                <h4 class="text-3xl md:text-5xl font-black text-orange-400 mb-2">3x</h4>
+                <p class="text-slate-400 text-xs">Price difference for same medicine across pharmacies</p>
+            </div>
+            <div>
+                <h4 class="text-3xl md:text-5xl font-black text-purple-400 mb-2">~30s</h4>
+                <p class="text-slate-400 text-xs">Time to fully analyse a prescription with ClarityRx</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="tech" class="py-24 px-6 bg-white">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-12 items-center">
+            <div class="md:w-1/2">
+                <span class="text-blue-600 font-bold tracking-widest text-xs uppercase">Under The Hood</span>
+                <h2 class="text-4xl font-bold mt-2 mb-6">The 5-Layer Pipeline</h2>
+                <div class="space-y-8">
+                    <div class="relative pl-12 border-l-2 border-slate-100 ml-4">
+                        <div
+                            class="absolute -left-4 top-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                            1</div>
+                        <h4 class="font-bold">Gemini 2.5 Flash OCR</h4>
+                        <p class="text-slate-500 text-sm">Google Gemini reads the prescription image with extended
+                            thinking (thinking_budget=4096). It transcribes <em>exactly</em> what is written — never
+                            correcting drug names. Handles Hindi/Devanagari script mixed with English, MAN notation
+                            (1-0-1 = morning + night), and circled numbers for duration.</p>
+                    </div>
+                    <div class="relative pl-12 border-l-2 border-slate-100 ml-4">
+                        <div
+                            class="absolute -left-4 top-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                            2</div>
+                        <h4 class="font-bold">LLM Drug Name Resolver <span
+                                class="text-xs font-normal text-slate-400 ml-1">(Groq · LLaMA 3.3 70B)</span></h4>
+                        <p class="text-slate-500 text-sm">Garbled OCR names like "Sinarset" or "Montare LC" are sent to
+                            LLaMA 3.3 70B via Groq with the patient's age, weight, and all co-drugs as context. The
+                            model suggests the most likely real Indian brand name and generic (INN) name, with a
+                            confidence rating of high / medium / low.</p>
+                    </div>
+                    <div class="relative pl-12 border-l-2 border-slate-100 ml-4">
+                        <div
+                            class="absolute -left-4 top-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                            3</div>
+                        <h4 class="font-bold">RapidFuzz Local Matcher <span
+                                class="text-xs font-normal text-slate-400 ml-1">(Indian Medicine JSON)</span></h4>
+                        <p class="text-slate-500 text-sm">The resolved name is fuzzy-matched against a local JSON
+                            database of Indian medicines using RapidFuzz's <code
+                                class="text-blue-600">partial_ratio</code> scorer. A score of 75+ marks the drug as
+                            Verified. This dataset is a <strong>current limitation</strong> — it is a static snapshot
+                            and does not include every regional brand or recent launch.</p>
+                    </div>
+                    <div class="relative pl-12 border-l-2 border-slate-100 ml-4">
+                        <div
+                            class="absolute -left-4 top-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                            4</div>
+                        <h4 class="font-bold">Clinical Plausibility Validator <span
+                                class="text-xs font-normal text-slate-400 ml-1">(Groq · LLaMA 3.3 70B)</span></h4>
+                        <p class="text-slate-500 text-sm">A second LLM call checks whether each matched drug makes
+                            clinical sense for the patient's age, complaint, and other medicines. Implausible matches
+                            are demoted to Unverified and sent back for a second fuzzy-match attempt using the LLM's
+                            suggested correction.</p>
+                    </div>
+                    <div class="relative pl-12 border-l-2 border-slate-100 ml-4">
+                        <div
+                            class="absolute -left-4 top-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                            5</div>
+                        <h4 class="font-bold">Anakin Wire Price Fetcher <span
+                                class="text-xs font-normal text-slate-400 ml-1">(Parallel · On Demand)</span></h4>
+                        <p class="text-slate-500 text-sm">When you click "Compare Prices", three Anakin Wire async jobs
+                            submit simultaneously — <code class="text-blue-600">tm_search</code> (Truemeds), <code
+                                class="text-blue-600">nm_search</code> (Netmeds), <code
+                                class="text-blue-600">tmg_search</code> (Tata 1mg). Results come back in ~2–3 seconds
+                            and are displayed as a sorted price catalog, cheapest first.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="md:w-1/2 glass-card bg-slate-50 border-slate-200">
+                <img src="https://f5b623aa.delivery.rocketcdn.me/wp-content/uploads/elementor/thumbs/Blog_Optical-Character-Recognition-In-Healthcare-qmegovxeea50yufqmkr4pteax80jiwoj4oxasl9szk.jpg"
+                    class="rounded-xl mb-6">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-4 bg-white rounded-xl border border-blue-100">
+                        <span class="text-xs font-bold text-slate-700 italic font-mono">"T. Sinarest 1-0-1 ⑦"</span>
+                        <i class="fas fa-arrow-right text-blue-500 mx-2"></i>
+                        <span class="text-xs font-bold text-blue-600">"Cold tablet · Morning + Night · 7 days"</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-white rounded-xl border border-teal-100">
+                        <span class="text-xs font-bold text-slate-700 italic font-mono">"Inj. Monocef 0-0-1 ③"</span>
+                        <i class="fas fa-arrow-right text-teal-500 mx-2"></i>
+                        <span class="text-xs font-bold text-teal-600">"Antibiotic injection · At night · 3 days"</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-white rounded-xl border border-orange-100">
+                        <span class="text-xs font-bold text-slate-700 italic font-mono">"khaane ke baad"</span>
+                        <i class="fas fa-arrow-right text-orange-500 mx-2"></i>
+                        <span class="text-xs font-bold text-orange-600">"After food"</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 px-6 bg-slate-50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">What ClarityRx Does With Your Prescription
+                </h2>
+                <p class="text-slate-500 mt-4">Every drug on your prescription is handled differently based on what the
+                    AI can verify.</p>
+            </div>
+
+            <div class="overflow-x-auto glass-card p-4">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200">
+                            <th class="py-4 px-4 text-xs font-black uppercase text-slate-400">Drug Status</th>
+                            <th class="py-4 px-4 text-xs font-black uppercase text-slate-400">What happened</th>
+                            <th class="py-4 px-4 text-xs font-black uppercase text-slate-400">What you see</th>
+                            <th class="py-4 px-4 text-xs font-black uppercase text-slate-400 text-center">Price Button
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <tr class="border-b border-slate-50 hover:bg-blue-50/30 transition">
+                            <td class="py-4 px-4 font-bold text-green-600">✓ Verified</td>
+                            <td class="py-4 px-4 text-slate-600">Fuzzy match score ≥ 75 AND clinical plausibility check
+                                passed</td>
+                            <td class="py-4 px-4">Name · Confidence bar · Dosage chips · Description · AI summary</td>
+                            <td class="py-4 px-4 text-center"><span
+                                    class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold">SHOWN</span>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-slate-50 hover:bg-blue-50/30 transition">
+                            <td class="py-4 px-4 font-bold text-amber-600">⚠ Unverified</td>
+                            <td class="py-4 px-4 text-slate-600">Score &lt; 75 or LLM flagged as clinically implausible
+                            </td>
+                            <td class="py-4 px-4">OCR name shown · Low confidence bar · Warning message</td>
+                            <td class="py-4 px-4 text-center"><span
+                                    class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-[10px] font-bold">HIDDEN</span>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-slate-50 hover:bg-blue-50/30 transition">
+                            <td class="py-4 px-4 font-bold text-blue-600">↻ Re-matched</td>
+                            <td class="py-4 px-4 text-slate-600">Validator suggested a better name → re-ran fuzzy match
+                                → improved score</td>
+                            <td class="py-4 px-4">New matched name used · Original OCR name preserved for reference</td>
+                            <td class="py-4 px-4 text-center"><span
+                                    class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] font-bold">SHOWN</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 px-6 max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-12">Questions</h2>
+        <div class="space-y-6">
+            <details class="group border-b border-slate-200 pb-6">
+                <summary class="flex justify-between items-center font-bold text-lg cursor-pointer list-none">
+                    How accurate is the drug identification?
+                    <span class="text-blue-600 transition group-open:rotate-180"><i
+                            class="fas fa-chevron-down"></i></span>
+                </summary>
+                <p class="text-slate-500 mt-4 text-sm leading-relaxed">Honestly — it varies. For common Indian brand
+                    names (Dolo, Sinarest, Montair, Pantop, Pan-D) the system works well. For rare drugs, very regional
+                    brands, or badly smeared handwriting the accuracy drops significantly. This is an early MVP built on
+                    a static local medicine dataset of limited size. The confidence score on every card is there
+                    specifically so you can judge when to trust it and when to double-check with your pharmacist. We
+                    show everything — verified and unverified — so nothing is hidden from you.</p>
+            </details>
+
+            <details class="group border-b border-slate-200 pb-6">
+                <summary class="flex justify-between items-center font-bold text-lg cursor-pointer list-none">
+                    What is RapidFuzz and why use it?
+                    <span class="text-blue-600 transition group-open:rotate-180"><i
+                            class="fas fa-chevron-down"></i></span>
+                </summary>
+                <p class="text-slate-500 mt-4 text-sm leading-relaxed">RapidFuzz is a fast fuzzy string matching
+                    library. We use it to compare the LLM-resolved drug name against our local Indian medicine database
+                    using a <code>partial_ratio</code> scorer. It handles misspellings, abbreviations, and partial
+                    matches well. The downside is that it is purely statistical — it doesn't understand medicine. A
+                    score of 76 might be a correct match or a wrong one. That's why we layer a clinical plausibility
+                    check on top. RapidFuzz handles the first-pass shortlist; the LLM validates whether it actually
+                    makes sense.</p>
+            </details>
+
+            <details class="group border-b border-slate-200 pb-6">
+                <summary class="flex justify-between items-center font-bold text-lg cursor-pointer list-none">
+                    Why are some medicines shown as "Unverified"?
+                    <span class="text-blue-600 transition group-open:rotate-180"><i
+                            class="fas fa-chevron-down"></i></span>
+                </summary>
+                <p class="text-slate-500 mt-4 text-sm leading-relaxed">A drug is marked Unverified when either the fuzzy
+                    match score is below 75 out of 100, or when the clinical validator determines the match is
+                    implausible for the patient's age and condition. This happens most often with very regional brand
+                    names not in our database, extremely garbled handwriting that even Gemini cannot read clearly, or
+                    drugs prescribed by very unusual combinations. We show Unverified drugs anyway — hidden from the
+                    price section — because telling you something is uncertain is more useful than hiding it.</p>
+            </details>
+
+            <details class="group border-b border-slate-200 pb-6">
+                <summary class="flex justify-between items-center font-bold text-lg cursor-pointer list-none">
+                    How does the price comparison work?
+                    <span class="text-blue-600 transition group-open:rotate-180"><i
+                            class="fas fa-chevron-down"></i></span>
+                </summary>
+                <p class="text-slate-500 mt-4 text-sm leading-relaxed">When you click "Compare Prices" on a verified
+                    medicine card, we simultaneously query Truemeds (tm_search), Netmeds (nm_search), and Tata 1mg
+                    (tmg_search) through the Anakin Wire API. All three run in parallel so the result comes back in
+                    roughly 2–3 seconds. Results are sorted cheapest first and the lowest price is tagged as "Best". The
+                    cheapest result is saved to your record so re-opening the panel is instant. Note: prices are scraped
+                    and may occasionally be stale — always verify on the pharmacy site before ordering.</p>
+            </details>
+
+            <details class="group border-b border-slate-200 pb-6">
+                <summary class="flex justify-between items-center font-bold text-lg cursor-pointer list-none">
+                    Does this replace professional medical advice?
+                    <span class="text-blue-600 transition group-open:rotate-180"><i
+                            class="fas fa-chevron-down"></i></span>
+                </summary>
+                <p class="text-slate-500 mt-4 text-sm leading-relaxed">No — and we want to be direct about this.
+                    ClarityRx is a health literacy tool, not a diagnostic or clinical system. The AI summary explains
+                    what your prescription likely means in plain language. It does not account for your full medical
+                    history, allergies, or doctor-specific reasoning. The descriptions and summaries are generated by a
+                    general-purpose LLM, not reviewed by a pharmacist. Always follow your doctor's original instructions
+                    and confirm with a pharmacist if anything looks unexpected.</p>
+            </details>
+
+            <details class="group border-b border-slate-200 pb-6">
+                <summary class="flex justify-between items-center font-bold text-lg cursor-pointer list-none">
+                    What languages does the prescription need to be in?
+                    <span class="text-blue-600 transition group-open:rotate-180"><i
+                            class="fas fa-chevron-down"></i></span>
+                </summary>
+                <p class="text-slate-500 mt-4 text-sm leading-relaxed">The OCR model (Gemini 2.5 Flash) handles English,
+                    Hindi/Devanagari, and mixed-script prescriptions. Drug names written in Roman characters (even
+                    garbled ones) are handled best. Pure Hindi-script prescriptions are phonetically romanised before
+                    processing. Regional scripts beyond Hindi are not reliably supported in the current version — this
+                    is a known limitation we aim to address in future updates.</p>
+            </details>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-white pt-20 pb-10 px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+
+                <div class="col-span-1 md:col-span-1">
+                    <div class="flex items-center gap-2 mb-6">
+                        <div
+                            class="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-lg shadow-lg">
+                            <i class="fas fa-hand-holding-medical"></i>
+                        </div>
+                        <span class="text-xl font-bold tracking-tight">Clarity<span
+                                class="text-blue-400">Rx</span></span>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                        An early-stage AI tool to help Indian patients read, understand, and compare prices for their
+                        handwritten prescriptions. Built honestly — limitations and all.
+                    </p>
+                    <div class="flex gap-4 text-slate-500">
+                        <a href="https://github.com/Noob-Developer-Real/Clarity_Rx"
+                            class="hover:text-blue-400 transition"><i class="fab fa-github fa-lg"></i></a>
+                        <a href="#" class="hover:text-blue-400 transition"><i class="fab fa-linkedin fa-lg"></i></a>
+                        <a href="#" class="hover:text-blue-400 transition"><i class="fab fa-twitter fa-lg"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-6 text-white uppercase text-xs tracking-widest">Platform</h4>
+                    <ul class="space-y-4 text-sm text-slate-400">
+                        <li><a href="#how" class="hover:text-white transition">How it Works</a></li>
+                        <li><a href="#impact" class="hover:text-white transition">Why It Matters</a></li>
+                        <li><a href="#tech" class="hover:text-white transition">Technology Stack</a></li>
+                        <li><a href="{% url 'upload_prescription' %}" class="hover:text-white transition">Try It Now</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-6 text-white uppercase text-xs tracking-widest">AI Stack</h4>
+                    <ul class="space-y-4 text-sm text-slate-400">
+                        <li><span class="text-slate-300 font-medium">OCR</span> — Google Gemini 2.5 Flash</li>
+                        <li><span class="text-slate-300 font-medium">LLM</span> — Groq · LLaMA 3.3 70B</li>
+                        <li><span class="text-slate-300 font-medium">Matcher</span> — RapidFuzz partial_ratio</li>
+                        <li><span class="text-slate-300 font-medium">Prices</span> — Anakin Wire API</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-800/50 p-4 rounded-3xl border border-slate-700/50">
+                    <h4 class="font-bold mb-4 text-amber-400 uppercase text-xs tracking-widest">⚠ Developer Note</h4>
+                    <p class="text-xs text-slate-300 italic mb-4 leading-relaxed">
+                        "ClarityRx is an MVP in early development. Drug matching accuracy depends on our current dataset
+                        size and RapidFuzz's statistical scoring — not a clinical database. Results will be imperfect,
+                        especially for regional or rare brands. We ship the confidence score on every card so users
+                        always know how much to trust a result. This is day one of a long road."
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">System Status:
+                            Live · MVP v1</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-slate-800 pt-10">
+                <div class="text-center md:text-left">
+                    <div class="flex flex-wrap justify-center md:justify-start gap-3">
+                        <span
+                            class="px-3 py-1 bg-slate-800 rounded text-[10px] text-yellow-400 font-bold border border-slate-700 uppercase">Python
+                            3.11</span>
+                        <span
+                            class="px-3 py-1 bg-slate-800 rounded text-[10px] text-teal-400 font-bold border border-slate-700 uppercase">Django
+                            4.x</span>
+                        <span
+                            class="px-3 py-1 bg-slate-800 rounded text-[10px] text-blue-400 font-bold border border-slate-700 uppercase">Gemini
+                            2.5 Flash</span>
+                        <span
+                            class="px-3 py-1 bg-slate-800 rounded text-[10px] text-purple-400 font-bold border border-slate-700 uppercase">Groq
+                            LLaMA 3.3</span>
+                        <span
+                            class="px-3 py-1 bg-slate-800 rounded text-[10px] text-pink-400 font-bold border border-slate-700 uppercase">RapidFuzz</span>
+                        <span
+                            class="px-3 py-1 bg-slate-800 rounded text-[10px] text-orange-400 font-bold border border-slate-700 uppercase">Anakin
+                            Wire</span>
+                        <span
+                            class="px-3 py-1 bg-slate-800 rounded text-[10px] text-red-400 font-bold border border-slate-700 uppercase">Tailwind
+                            CSS</span>
+                    </div>
+                    <p class="text-slate-600 text-[10px] mt-6 uppercase tracking-widest font-medium">
+                        &copy; 2026 ClarityRx · Built for Anakin Build-A-Thon 2026
+                    </p>
+                </div>
+
+                <div class="text-xs text-slate-500 space-x-6">
+                    <a href="#" class="hover:text-slate-300 transition">Privacy Policy</a>
+                    <a href="#" class="hover:text-slate-300 transition">Disclaimer</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+        }
+    </script>
+
+</body>
+{% endblock %}

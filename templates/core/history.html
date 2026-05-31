@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Prescription History | ClarityRx{% endblock %}
+
+{% block content %}
+<main class="min-h-screen px-6 py-12 bg-slate-50">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900">Prescription History</h1>
+                <p class="text-slate-500 mt-1">Your previous prescription analyses.</p>
+            </div>
+            <a href="{% url 'upload_prescription' %}" class="btn-winner px-5 py-3 inline-flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                New Scan
+            </a>
+        </div>
+
+        {% if prescriptions %}
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            {% for prescription in prescriptions %}
+            <a href="{% url 'view_prescription' prescription.id %}"
+                class="flex items-center justify-between gap-4 px-5 py-4 border-b border-slate-100 last:border-b-0 hover:bg-blue-50 transition">
+                <div class="min-w-0">
+                    <div class="font-bold text-slate-900">
+                        {{ prescription.created_at|date:"M d, Y" }}
+                    </div>
+                    <div class="text-sm text-slate-500 mt-1">
+                        {{ prescription.processing_status|title }}
+                        {% if prescription.processing_time %}
+                        · Processed in {{ prescription.processing_time }}s
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-sm font-bold text-blue-600 flex items-center gap-2">
+                    View
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white border border-slate-200 rounded-xl p-10 text-center shadow-sm">
+            <i class="fa-solid fa-file-medical text-4xl text-slate-300 mb-4"></i>
+            <p class="font-bold text-slate-800">No prescriptions yet</p>
+            <p class="text-slate-500 text-sm mt-1">Upload a prescription to see it here.</p>
+        </div>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ClarityRx{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'images/favicon.jpg' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Keep your existing custom classes here or in style.css */
+        .hero-bg {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+        }
+        .btn-winner {
+            background: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .btn-winner:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+        }
+    </style>
+</head>
+<body class="hero-bg">
+    {% block content %}
+    {% endblock %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

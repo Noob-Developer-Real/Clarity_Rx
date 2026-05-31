@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Prescription | ClarityRx{% endblock %}
+
+{% block content %}
+<body class="hero-bg">
+    <nav class="nav-container">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="bg-blue-600 text-white w-10 h-10 flex items-center justify-center rounded-xl shadow-lg">
+                <i class="fas fa-hand-holding-medical fa-lg"></i>
+            </div>
+            <span class="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">Clarity<span class="text-blue-600">Rx</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'prescription_history' %}" class="text-sm font-bold text-slate-600 hover:text-blue-600 transition">History</a>
+            <a href="{% url 'home' %}" class="text-sm font-bold text-slate-600 hover:text-blue-600 transition">Back to Upload</a>
+        </div>
+    </nav>
+
+    <main class="pt-12 md:pt-20 pb-20 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4">Prescription <span class="text-gradient">Analysis</span></h1>
+            <p class="text-slate-500">Review your simplified medication instructions below.</p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            
+            <div class="w-full lg:w-1/2">
+                <div class="glass-card p-2 overflow-hidden shadow-2xl border-none">
+                    <div class="bg-slate-900 p-3 flex gap-2 rounded-t-[28px]">
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span class="text-[10px] text-slate-400 ml-2 font-mono uppercase">Original_Scan.jpg</span>
+                    </div>
+                    {% if prescription.image %}
+                        <img src="{{ prescription.image.url }}" alt="Prescription Scan" class="w-full h-auto block rounded-b-[28px] opacity-95">
+                    {% else %}
+                        <div class="py-20 text-center bg-slate-50 rounded-b-[28px]">
+                            <i class="fas fa-image text-4xl text-slate-300 mb-2"></i>
+                            <p class="text-slate-400">No image available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="w-full lg:w-1/2 space-y-6">
+                <div class="box-old">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter block">Extracted Clinical Text</span>
+                    <p class="text-lg font-mono mt-3 text-slate-600">
+                        {{ prescription.raw_text|default:"Scanning..." }}
+                    </p>
+                </div>
+
+                <div class="box-new">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-magic"></i>
+                        <span class="text-[10px] font-black text-blue-200 uppercase tracking-tighter">ClarityRx AI Translation</span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Your Instructions:</h3>
+                    <p class="text-xl leading-relaxed">
+                        {{ prescription.simplified_text|linebreaksbr }}
+                        <br>
+                        <hr>
+                        <h1 style="font-size: 1.2rem;font-weight:800;">NOTE!</h1>
+                        <h1 style="font-size: 1.2rem;font-weight:700;">As we are in development phase so the results might not be accurate</h1>
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-4 mt-8">
+                    <a href="javascript:window.print()" class="btn-winner py-4 px-8 text-sm">
+                        <i class="fas fa-print"></i> Save as PDF
+                    </a>
+                    <a href="{% url 'upload_prescription' %}" class="bg-white text-slate-700 px-8 py-4 rounded-full font-bold shadow-md hover:bg-slate-50 transition border border-slate-100 flex items-center gap-2">
+                        <i class="fas fa-redo"></i> New Scan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+{% endblock %}

@@ -12,15 +12,16 @@ CLOUDINARY_STORAGE = {
     "API_KEY": os.getenv("CLOUDINARY_API_KEY"),
     "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
 }
-OCR_SPACE_API_KEY = os.getenv("OCR_SPACE_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GROQ_API_TOKEN = os.getenv("GROQ_API_TOKEN")
+ANAKIN_API_KEY = os.getenv("ANAKIN_API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG =False
+DEBUG =True
 
 ALLOWED_HOSTS = ["*"]
 
