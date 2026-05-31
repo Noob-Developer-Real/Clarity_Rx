@@ -212,7 +212,7 @@ MEDICINE_PRICE_CITY=New Delhi
 
 ## Team
 
-Built with ❤️ by **Noob Mon** — solo project for HackIndia 2026.
+Built with ❤️ by **Noob Mon** — solo project for Anakin Build-A-Thon 2026
 
 ---
 
