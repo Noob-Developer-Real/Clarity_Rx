@@ -1,0 +1,5 @@
+the data that i need from the medicine_dataset.json is short compostion1 and composition2.
+
+telegram webhook need to be the real time so i will use the drf for this to call.
+
+wire configuration i will do later on the day no need to implement now as the data medicine name is not correctly ordered.
