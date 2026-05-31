@@ -12,6 +12,7 @@
 [![Django](https://img.shields.io/badge/Django-4.x-092E20?style=for-the-badge&logo=django&logoColor=white)](https://djangoproject.com)
 [![Gemini](https://img.shields.io/badge/Gemini_2.5_Flash-OCR-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/gemini)
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-F55036?style=for-the-badge)](https://groq.com)
+[![Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/rgVUMTHk-vA)
 
 **Built for · Anakin Build-A-Thon2026**
 
