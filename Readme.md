@@ -1,4 +1,6 @@
 <div align="center">
+         
+![ClarityRx Banner](banner.svg)
 
 # ClarityRx
 
@@ -55,7 +57,12 @@ Upload prescription image
   (triggered on demand)                      Netmeds  ₹28.5
                                              Tata 1mg ₹29
 ```
+## Live Demo
+![Demo](scan.jpg)
 
+🔗 [clarityrx.tejasdeveloper.xyz](http://clarityrx.tejasdeveloper.xyz)
+
+> Test credentials — Email: `test@test.com` · Password: `testing`
 ---
 
 ## Key Features
@@ -162,6 +169,41 @@ Triggered only when user clicks "Compare Prices". Three Anakin Wire async jobs (
 | Language | Python 3.11+ |
 
 ---
+## 🖼️ Screenshots
+
+<table>
+  <tr>
+    <td align="center"><b>Desktop</b></td>
+    <td align="center"><b>Mobile</b></td>
+  </tr>
+  <tr>
+    <td><img src="./images/hero.jpg" width="100%"></td>
+    <td><img src="./images/mob-hero.jpg" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="./images/crop.jpg" width="100%"></td>
+    <td><img src="./images/mob-crop.jpg" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="./images/upload.jpg" width="100%"></td>
+    <td><img src="./images/mob-upload.jpg" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="./images/result-1.jpg" width="100%"></td>
+    <td><img src="./images/mob-result-1.jpg" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="./images/result-2.jpg" width="100%"></td>
+    <td><img src="./images/mob-result-2.jpg" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="./images/result-3.jpg" width="100%"></td>
+    <td><img src="./images/mob-result-3.jpg" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="./images/result-4.jpg" width="100%"></td>
+  </tr>
+</table>
 
 ## Installation
 
