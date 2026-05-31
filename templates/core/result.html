@@ -363,7 +363,7 @@
     }
 
     .price-row .pr-source {
-        font-size: .65rem;
+        font-size: .55rem;
         font-weight: 700;
         opacity: .75;
         text-transform: uppercase;
@@ -371,32 +371,31 @@
     }
 
     .price-row .pr-name {
-        font-size: .75rem;
-        font-weight: 500;
-        opacity: .88;
-        margin-top: .05rem;
-        max-width: 120px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    font-size: .68rem;
+    font-weight: 500;
+    opacity: .88;
+    margin-top: .05rem;
+    line-height: 1.25;
+    white-space: normal;
+    word-break: break-word;
+}
 
     .price-row .pr-price {
-        font-size: 1.05rem;
+        font-size: 0.85rem;
         font-weight: 800;
         letter-spacing: -.3px;
         flex-shrink: 0;
     }
 
     .price-row .pr-mrp {
-        font-size: .65rem;
+        font-size: .55rem;
         opacity: .6;
         text-decoration: line-through;
         margin-left: .25rem;
     }
 
     .price-row .pr-disc {
-        font-size: .62rem;
+        font-size: .52rem;
         background: rgba(255, 255, 255, .18);
         padding: .1rem .4rem;
         border-radius: 999px;
@@ -549,10 +548,29 @@
         </div>
 
         <!-- ── Prescription image ── -->
-        <div class="flex justify-center mb-6">
-            <img src="{{ prescription.image.url }}" alt="Uploaded Prescription"
-                class="rounded-xl shadow-md max-h-60 object-contain">
+        
+        <div class="mb-8">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">
+            Original Prescription
+        </h3>
+
+        <a href="{{ prescription.image.url }}" target="_blank"
+            class="text-blue-600 text-sm font-semibold hover:text-blue-700">
+            <i class="fa-solid fa-expand mr-1"></i>
+            View Full Size
+        </a>
+    </div>
+
+    <div class="bg-gradient-to-b from-slate-50 to-white border border-slate-200 rounded-3xl p-3 shadow-xl">
+        <div class="overflow-hidden rounded-[32px]">
+            <img src="{{ prescription.image.url }}"
+                 alt="Uploaded Prescription"
+                 class="w-full max-w-5xl mx-auto max-h-[320px] object-contain shadow-lg">
         </div>
+    </div>
+</div>
+
 
         <!-- ── Processing state ── -->
         {% if prescription.processing_status == "processing" %}
@@ -730,7 +748,6 @@
             This explanation is for understanding only and does not replace medical advice.
             Always consult your doctor or pharmacist before changing your medication.
         </div>
-
         <!-- ── Back button ── -->
         <div class="mt-6 text-center">
             <a href="{% url 'upload_prescription' %}" class="btn-winner px-6 py-3 inline-flex gap-2">
@@ -741,7 +758,43 @@
 
         {% endif %}<!-- /completed -->
     </div><!-- /glass-card -->
+    <!-- Support Notice -->
 </main>
+<div class="mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 shadow-sm">
+    <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-headset"></i>
+        </div>
+
+        <div>
+            <h4 class="font-bold text-slate-900 mb-1">
+                Need Help?
+            </h4>
+
+            <p class="text-sm text-slate-600 leading-relaxed">
+                If you encounter any issues, bugs, incorrect medicine information,
+                pricing errors, or unexpected behavior while using ClarityRx,
+                please contact us at
+                <a href="mailto:contact@tejasdeveloper.xyz"
+                    class="font-semibold text-blue-600 hover:text-blue-700 underline">
+                    contact@tejasdeveloper.xyz
+                </a>.
+            </p>
+
+            <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                <strong>Average response time:</strong> within 30 minutes.
+                If you do not receive a reply within that timeframe,
+                please resend your message as email delivery delays may occasionally occur.
+            </p>
+
+            <div
+                class="mt-3 inline-flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 rounded-full px-3 py-1 text-xs font-semibold">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                Support Team Online
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
