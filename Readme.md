@@ -1,6 +1,6 @@
 <div align="center">
          
-![ClarityRx Banner](banner.svg)
+![ClarityRx Banner](./images/banner.svg)
 
 # ClarityRx
 
@@ -58,7 +58,7 @@ Upload prescription image
                                              Tata 1mg ₹29
 ```
 ## Live Demo
-![Demo](scan.jpg)
+![Demo](./images/scan.jpg)
 
 🔗 [clarityrx.tejasdeveloper.xyz](http://clarityrx.tejasdeveloper.xyz)
 
@@ -190,7 +190,7 @@ Triggered only when user clicks "Compare Prices". Three Anakin Wire async jobs (
   </tr>
   <tr>
     <td><img src="./images/result-1.jpg" width="100%"></td>
-    <td><img src="./images/mob-result-1.jpg" width="100%"></td>
+    <td><img src="./images/mod-result-1.jpg" width="100%"></td>
   </tr>
   <tr>
     <td><img src="./images/result-2.jpg" width="100%"></td>
