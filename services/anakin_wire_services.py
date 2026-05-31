@@ -39,8 +39,6 @@ class AnakinWire:
             data = response.json()
 
             status = data.get("status")
-            print("FULL RESULT =", data)
-            print("JOB STATUS =", status)
 
             if status == "completed":
                 return data
