@@ -1,5 +1,452 @@
-the data that i need from the medicine_dataset.json is short compostion1 and composition2.
+================================================================================
+                          ClarityRx — Technical Documentation
+                          Hackathon Submission · HackIndia 2026
+================================================================================
 
-telegram webhook need to be the real time so i will use the drf for this to call.
+Project Name    : ClarityRx
+Category        : Healthcare AI / MedTech
+Stack           : Python 3.11 · Django 4.x · Gemini 2.5 Flash · Groq LLaMA 3.3
+Repository      : https://github.com/Noob-Developer-Real/ClarityRx
+Author          : Noob Mon
 
-wire configuration i will do later on the day no need to implement now as the data medicine name is not correctly ordered.
+--------------------------------------------------------------------------------
+1. PROBLEM STATEMENT
+--------------------------------------------------------------------------------
+
+India generates over 1 billion handwritten prescriptions annually. These are
+written by doctors in a mix of English brand names, abbreviated Latin notation,
+and Hindi/regional script instructions. The result is that patients routinely:
+
+  • Cannot read or understand their own prescription
+  • Don't know what each medicine treats or when to take it
+  • Overpay because they have no visibility into price differences across
+    pharmacies
+  • Miss critical dosage/duration instructions written in regional script
+
+Existing solutions (pharmacy apps, health portals) require the patient to
+manually type the medicine name — which defeats the purpose when they cannot
+read it in the first place.
+
+ClarityRx solves this by accepting a raw photo and doing everything
+automatically: OCR → drug identification → plain-English explanation →
+live price comparison.
+
+--------------------------------------------------------------------------------
+2. SOLUTION OVERVIEW
+--------------------------------------------------------------------------------
+
+User uploads a photo of their prescription (handwritten or printed).
+ClarityRx processes it through a 5-layer AI pipeline and returns:
+
+  • Every drug on the prescription — verified or flagged as unconfident
+  • A confidence score (0–100) for each drug identification
+  • Form, frequency, and duration for each drug (Tablet, twice daily, 7 days)
+  • A one-sentence plain-English description of what each drug does
+  • A 3–5 sentence AI health summary explaining the likely condition
+  • Live prices from Truemeds, Netmeds, and Tata 1mg — shown on demand
+
+The entire analysis (excluding price fetch) completes in 25–35 seconds.
+Price comparison is triggered lazily (on button click) and returns in ~2–3s.
+
+--------------------------------------------------------------------------------
+3. SYSTEM ARCHITECTURE
+--------------------------------------------------------------------------------
+
+  [Browser] → POST /create/prescription/
+                │
+                ▼
+  views.upload_prescription()
+                │
+                ├── build_absolute_uri(prescription.image.url)
+                │
+                ▼
+  prescription_pipeline.process_prescription(image_url)
+                │
+       ┌────────┼────────────────────────────────┐
+       │        │                                │
+  [Layer 1] [Layer 2a]  [Layer 2b]  [Layer 2c]  [Layer 3]  [Layer 4]
+  Gemini    LLM        RapidFuzz   LLM          Re-match   Groq
+  OCR       Resolver   Matcher     Validator    Loop       Describer
+       │
+       ▼
+  Save to DB (Prescription + PrescriptionMedicine rows)
+  Generate AI summary → save to prescription.simplified_text
+                │
+                ▼
+  redirect → GET /create/prescription/<uuid>/
+                │
+                ▼
+  views.view_prescription() → render result.html
+                │
+                │  User clicks "Compare Prices"
+                ▼
+  GET /api/prices/?drug=<name>&medicine_id=<id>
+                │
+        ┌───────┼───────┐
+        ▼       ▼       ▼
+   Truemeds  Netmeds  Tata 1mg   (parallel, ThreadPoolExecutor)
+        └───────┼───────┘
+                ▼
+        JsonResponse → JS renders price catalog
+
+--------------------------------------------------------------------------------
+4. MODULE DOCUMENTATION
+--------------------------------------------------------------------------------
+
+4.1 ocr_gemini.py
+─────────────────
+Purpose     : Transcribe prescription image to structured text
+Model       : gemini-2.5-flash (thinking_budget=4096)
+Input       : Image URL (fetched via requests, base64-encoded)
+Output      : Structured text with sections:
+              HEADER / VITALS / CHIEF_COMPLAINT / INVESTIGATIONS /
+              MEDICATIONS / NOTES
+
+Key design decisions:
+  - Temperature 0.0 — no creativity, maximum fidelity
+  - Prompt explicitly forbids "correcting" drug names
+  - Handles Hindi/Devanagari with phonetic romanisation
+  - Decodes frequency notation: 1-0-1, BD, TDS, OD, SOS
+  - Decodes circled duration numbers: ① = 1 day, ⑩ = 10 days
+
+Output format per drug:
+  DRUG: <exact OCR characters>
+    Form: Tablet / Syrup / Capsule / Injection / Drops / Sachet
+    Frequency: 1-0-1 (morning + night)
+    Duration: 7 days
+    Instructions: after food / UNCLEAR
+
+4.2 drug_name_resolver.py — resolve_drug_names()
+─────────────────────────────────────────────────
+Purpose     : Convert garbled OCR names to likely Indian brand/generic names
+Model       : llama-3.3-70b-versatile via Groq
+Input       : List of drug dicts + patient context (age, weight)
+Output      : Same list with added fields:
+              resolved_brand     — best-guess Indian brand name
+              resolved_generic   — INN generic name
+              resolve_confidence — high | medium | low
+              resolve_reasoning  — one-sentence explanation
+
+Context used by the LLM:
+  - Patient age (paediatric vs adult dosing conventions differ)
+  - Patient weight (weight-based dosing)
+  - All other drugs on the prescription (cross-drug reasoning)
+  - Drug form and frequency (helps disambiguate similar-sounding names)
+
+4.3 medicine_match.py
+──────────────────────
+Purpose     : Fuzzy-match resolved drug names against local Indian DB
+Library     : rapidfuzz (partial_ratio scorer)
+Database    : indian_medicine_data.json (~20k records, indexed by composition)
+Threshold   : 75/100 to be marked is_verified=True
+
+Algorithm:
+  1. Lowercase and strip the input name
+  2. Pre-filter candidates by first 2 chars (reduces search space ~50x)
+  3. If fewer than 10 candidates, search full list
+  4. Extract top-1 match with partial_ratio
+  5. Apply +8 bonus if first 3 chars match exactly
+  6. Return (matched_name, score)
+
+Performance: ~0.5ms per drug on a standard laptop with the pre-filter active.
+
+4.4 drug_name_resolver.py — validate_matches()
+───────────────────────────────────────────────
+Purpose     : Clinical plausibility check on fuzzy-matched drugs
+Model       : llama-3.3-70b-versatile via Groq
+Input       : Matched drug list + patient context (age, weight, complaint)
+Output      : Each drug annotated with:
+              match_plausible    — True / False
+              plausibility_reason — one-sentence explanation
+              override_name      — LLM suggestion for re-matching (or null)
+
+Plausibility criteria (evaluated by LLM):
+  - Is this drug appropriate for the stated complaint?
+  - Is this form/dose appropriate for the patient's age?
+  - Does this drug combination make clinical sense?
+  - Is the matched generic consistent with the OCR'd brand name?
+
+4.5 prescription_pipeline.py — _rematch_overrides()
+─────────────────────────────────────────────────────
+Purpose     : Re-run fuzzy match on LLM-suggested override names
+Input       : Drugs where match_plausible=False and override_name is set
+Process     :
+  1. Build temp drug list with override_name as the search term
+  2. Re-run match_drugs() on the temp list
+  3. For each result: if new_score >= 75 AND new_score > old_score → adopt
+  4. Preserve original OCR name; set rematch_applied=True for audit trail
+
+4.6 groq_simplifier.py — describe_drugs()
+──────────────────────────────────────────
+Purpose     : Generate patient-friendly one-liner for each verified drug
+Model       : llama-3.3-70b-versatile via Groq
+Approach    : Single batch call for all verified drugs (not one call per drug)
+Output      : drug["description"] — e.g. "Used to relieve fever and body pain."
+
+Unverified drugs get a static fallback:
+"Unverified medicine — could not be matched in the local dataset.
+ Please confirm with a pharmacist before use."
+
+4.7 medicine_price_services.py
+───────────────────────────────
+Purpose     : Fetch live medicine prices from 3 pharmacies via Anakin Wire
+API         : Anakin Wire (https://api.anakin.io/v1/wire)
+Concurrency : ThreadPoolExecutor(max_workers=3) — all 3 pharmacies in parallel
+
+Confirmed Wire action IDs (verified from Anakin dashboard):
+  Truemeds  → tm_search   | { query, warehouse_id: 20 }
+  Netmeds   → nm_search   | { query, page_id: "*", per_page: 10 }
+  Tata 1mg  → tmg_search  | { query, city: "New Delhi", page: 0 }
+
+Wire async protocol:
+  1. POST /v1/wire/task → HTTP 202 (success, job queued) → get job_id
+  2. GET  /v1/wire/jobs/{job_id} → poll until status="completed"
+  3. Parse response → extract products with name/price/mrp/discount/pack/url
+
+Response sorting: available sources first, then cheapest-first within available.
+Cheapest product across all sources identified and returned as top-level field.
+Caching: cheapest_price + cheapest_source saved to PrescriptionMedicine row
+         so subsequent button clicks return instantly without re-fetching.
+
+4.8 views.py
+─────────────
+  upload_prescription(request)
+    - POST only; saves image, runs pipeline synchronously
+    - Parses chief_complaint/age/weight from raw OCR via regex
+    - Saves ALL drugs (verified + unverified) to PrescriptionMedicine
+    - Generates AI health summary via Groq → saved to simplified_text
+    - NO prices fetched here — entirely lazy
+
+  view_prescription(request, id)
+    - Reads PrescriptionMedicine rows from DB
+    - Merges form/frequency/duration/instructions from pipeline_result JSON
+      (these fields are not stored as DB columns — attached as object attrs)
+    - Splits into verified_medicines / unverified_medicines lists
+    - Renders core/result.html
+
+  api_medicine_prices(request)
+    - GET endpoint, login_required
+    - Validates medicine_id ownership before processing
+    - Checks cheapest_price cache — returns immediately if already fetched
+    - Otherwise calls MedicinePriceService.get_prices_for_drug()
+    - Saves cheapest back to DB row on success
+    - Returns full JsonResponse consumed by JS renderCatalog()
+
+--------------------------------------------------------------------------------
+5. DATA MODELS
+--------------------------------------------------------------------------------
+
+Prescription
+  id                  UUIDField (PK)
+  patient             FK → AUTH_USER_MODEL
+  image               ImageField (upload_to="prescriptions/")
+  raw_text            TextField    — raw Gemini OCR output
+  simplified_text     TextField    — AI health summary (cached)
+  pipeline_result     JSONField    — full pipeline output for re-reading
+  patient_name        CharField
+  age                 CharField    — from OCR
+  weight              CharField    — from OCR
+  diagnosis           TextField    — chief_complaint from OCR
+  processing_status   CharField    — pending/processing/completed/failed
+  processing_time     FloatField   — seconds
+  error_message       TextField
+  created_at          DateTimeField
+  updated_at          DateTimeField
+
+PrescriptionMedicine
+  prescription        FK → Prescription
+  ocr_name            CharField    — exact OCR characters
+  matched_name        CharField    — fuzzy-matched DB name
+  resolved_brand      CharField    — LLM-resolved Indian brand name
+  resolved_generic    CharField    — LLM-resolved INN generic
+  match_score         FloatField   — 0–100 RapidFuzz score
+  is_verified         BooleanField — True if score >= 75
+  description         TextField    — patient-friendly one-liner
+  cheapest_price      DecimalField — cached from price API
+  cheapest_source     CharField    — "Truemeds" / "Netmeds" / "Tata 1mg"
+
+NOTE: form, frequency, duration, instructions are NOT stored as DB columns.
+They are read from Prescription.pipeline_result JSON at render time and
+attached as Python attributes on the model instance.
+
+--------------------------------------------------------------------------------
+6. URL ROUTES
+--------------------------------------------------------------------------------
+
+  POST /create/prescription/              upload_prescription
+  GET  /create/prescription/<uuid>/       view_prescription
+  GET  /api/prices/                       api_medicine_prices
+  GET  /create/history/                   prescription_history
+
+--------------------------------------------------------------------------------
+7. KNOWN LIMITATIONS & CONS
+--------------------------------------------------------------------------------
+
+OCR Layer
+  CON: Truly illegible handwriting (heavy smearing, very faint ink) results
+       in strings of (?) characters. The pipeline attempts resolution but
+       genuine gibberish cannot be recovered.
+
+  CON: Multi-column prescription layouts (common in printed templates) can
+       cause the regex medication parser to miss drugs in the right column.
+
+  CON: The Gemini output format is tightly coupled to the prompt. Minor
+       model updates by Google can change output formatting and break the
+       regex-based MEDICATIONS parser without any error raised.
+
+  CON: Non-standard prescriptions (receipts, discharge summaries, lab
+       reports) will be processed as prescriptions with unpredictable output.
+
+Drug Resolution
+  CON: LLM hallucination — the resolver occasionally invents plausible-
+       sounding Indian brand names that do not exist. These then score low
+       in fuzzy matching, but consume one API call.
+
+  CON: Regional brands (tier-2/tier-3 city chains) are underrepresented in
+       both the LLM training data and the local medicine JSON.
+
+  CON: The LLM resolver adds ~1–2 seconds to the pipeline. For prescriptions
+       with 8+ drugs, Groq token limits may truncate the response, causing
+       some drugs to be returned without resolution metadata.
+
+Fuzzy Matching
+  CON: partial_ratio is fast but imprecise for short names (3–5 chars).
+       "Pan" can match "Pantop", "Pankof", "Panado" — all at similar scores.
+
+  CON: The local JSON database is a static file. New drug launches,
+       discontinued products, and reformulations are not reflected until
+       the file is manually regenerated.
+
+  CON: The 75-point threshold is a single global cutoff. A drug with a
+       genuinely correct match at 73 is silently discarded. A wrong match
+       at 76 is shown as verified with a green badge.
+
+  CON: Matching is done on composition (short_composition1/2), not on brand
+       name. Brand names like "Dolo" do not appear in the index — only
+       "Paracetamol 650mg". This means the resolver's resolved_brand is
+       critical; if it fails, the match fails.
+
+Price Fetching
+  CON: Anakin Wire is an async scraping service with variable latency.
+       On bad infrastructure days it takes 2+ minutes per job, far exceeding
+       user tolerance even with the 2.5-minute timeout ceiling.
+
+  CON: Price data is scraped, not from official pharmacy APIs. Prices can
+       be stale (cached by Anakin), incorrect, or missing for drugs not
+       listed by that pharmacy.
+
+  CON: nm_search and tmg_search response schemas are undocumented. The
+       parsers use multi-key fallback guessing. A pharmacy API update will
+       silently return empty results rather than raising an error.
+
+  CON: Pricing is not location-aware. Prices shown are based on warehouse_id
+       20 (Truemeds) or city="New Delhi" (1mg). Users in other cities may
+       see different prices or out-of-stock results in reality.
+
+  CON: Anakin free tier is rate-limited. Under concurrent load, pharmacies
+       return 429 errors and the price panel shows "Could not load prices"
+       with no retry mechanism.
+
+  CON: Only the cheapest_price and cheapest_source are cached in the DB.
+       The full JSON response (all 3 pharmacies, all products) is NOT stored.
+       Re-opening the price panel after a page refresh re-fetches everything.
+
+Architecture & Performance
+  CON: The entire pipeline (OCR + 2 LLM calls + fuzzy match + descriptions +
+       health summary) runs synchronously on the Django request thread.
+       Under any real concurrent load this blocks all workers.
+       Production deployment requires Celery + Redis for async task queuing.
+
+  CON: No deduplication — uploading the same prescription image twice runs
+       the full pipeline twice, incurring double API costs.
+
+  CON: pipeline_result stores the complete LLM reasoning output (~5–15KB)
+       per prescription. At scale this bloats the database quickly.
+
+  CON: Drug dosage details (form, frequency, duration, instructions) are
+       not stored as DB columns. They are re-parsed from the pipeline_result
+       JSON on every page load. A corrupted or missing pipeline_result means
+       these fields disappear from the UI silently.
+
+Security & Privacy
+  CON: Prescription images contain highly sensitive medical data. They are
+       stored in Django MEDIA_ROOT with no encryption at rest. Direct URL
+       access is not protected beyond session authentication.
+
+  CON: The /api/prices/ endpoint requires login but does not enforce that
+       the requested drug name relates to a prescription owned by the user.
+       Any authenticated user can query prices for any drug.
+
+  CON: No file type validation on upload. Any file is accepted as long as
+       the field name is "image". Malicious uploads are not sanitised.
+
+User Experience
+  CON: No async processing. The user sees a blank page redirect and waits
+       25–35 seconds with no progress indicator during pipeline execution.
+
+  CON: Unverified medicines show a warning but give the user no way to
+       manually correct the identified name or confirm a suggestion.
+
+  CON: No in-app camera — users must take a photo separately and upload it,
+       adding friction on mobile.
+
+  CON: The AI health summary is a general-purpose LLM output, not reviewed
+       by a medical professional. It should not be used for clinical decisions
+       and the disclaimer in the UI does not adequately convey this risk.
+
+--------------------------------------------------------------------------------
+8. FUTURE IMPROVEMENTS
+--------------------------------------------------------------------------------
+
+  • Celery + Redis for async pipeline processing with WebSocket progress bar
+  • Pincode-aware price lookup (pass user location to pharmacy queries)
+  • In-app camera capture with auto-crop and perspective correction
+  • Store form/frequency/duration as proper DB columns (migration)
+  • Brand-name index alongside composition in medicine_match
+  • Full price result caching (Redis, 1hr TTL) to reduce Anakin calls
+  • Manual drug name correction UI for unverified medicines
+  • Pharmacist review mode — verified pharmacist can approve/reject AI output
+  • PDF prescription support (Gemini handles PDFs natively)
+  • Multi-language summary output (Hindi, Tamil, Bengali)
+
+--------------------------------------------------------------------------------
+9. THIRD-PARTY SERVICES & COSTS
+--------------------------------------------------------------------------------
+
+  Google Gemini 2.5 Flash
+    • Used for: OCR
+    • Cost: ~$0.00015 per prescription image (input tokens)
+    • Free tier: 1,500 requests/day (sufficient for hackathon demo)
+
+  Groq (LLaMA 3.3 70B Versatile)
+    • Used for: drug resolver, validator, descriptions, health summary
+    • Cost: free tier — 14,400 requests/day, 6,000 tokens/min
+    • 3 calls per prescription: ~$0 on free tier
+
+  Anakin Wire API
+    • Used for: pharmacy price scraping
+    • Cost: free tier available (rate limited)
+    • 3 Wire tasks per price comparison (tm_search, nm_search, tmg_search)
+
+  Total estimated cost per prescription (free tiers): $0.00015 (OCR only)
+
+--------------------------------------------------------------------------------
+10. RUNNING LOCALLY — QUICK REFERENCE
+--------------------------------------------------------------------------------
+
+  git clone https://github.com/Noob-Developer-Real/ClarityRx.git
+  cd ClarityRx
+  python -m venv .venv && source .venv/bin/activate
+  pip install -r requirements.txt
+
+  # Create .env with:
+  #   SECRET_KEY, GEMINI_API_KEY, GROQ_API_TOKEN, ANAKIN_API_KEY
+
+  python manage.py makemigrations
+  python manage.py migrate
+  python manage.py createsuperuser
+  python manage.py runserver
+
+  Open http://127.0.0.1:8000
+
+================================================================================
