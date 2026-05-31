@@ -13,7 +13,7 @@
 [![Gemini](https://img.shields.io/badge/Gemini_2.5_Flash-OCR-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/gemini)
 [![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-F55036?style=for-the-badge)](https://groq.com)
 
-**Built for · HackIndia / Hackathon 2026**
+**Built for · Anakin Build-A-Thon2026**
 
 </div>
 
