@@ -1,13 +1,13 @@
 ================================================================================
                           ClarityRx — Technical Documentation
-                          Hackathon Submission · HackIndia 2026
+                          Project Submission · Anakin Build-A-Thon 2026
 ================================================================================
 
 Project Name    : ClarityRx
 Category        : Healthcare AI / MedTech
 Stack           : Python 3.11 · Django 4.x · Gemini 2.5 Flash · Groq LLaMA 3.3 · Anakin Wire
 Repository      : https://github.com/Noob-Developer-Real/Clarity_Rx
-Author          : Noob Mon
+Author          : Tejasvi Bajaj
 
 --------------------------------------------------------------------------------
 1. PROBLEM STATEMENT
@@ -427,6 +427,11 @@ User Experience
     • Used for: pharmacy price scraping
     • Cost: free tier available (rate limited)
     • 3 Wire tasks per price comparison (tm_search, nm_search, tmg_search)
+
+Render Free Tier
+    • Used for hosting backend APIs for prescription processing, drug validation, and price lookup
+    • Cost: Free (sufficient for hackathon/demo purposes)
+    • Provides automatic scaling and stable environment for API requests
 
   Total estimated cost per prescription (free tiers): $0.00015 (OCR only)
 
